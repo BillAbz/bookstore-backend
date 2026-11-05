@@ -15,6 +15,7 @@ target/
 
 ### IntelliJ IDEA ###
 .idea
+.idea_backup/
 *.iws
 *.iml
 *.ipr
@@ -31,3 +32,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# H2 Database
+data/
+*.mv.db
+*.trace.db
+
+# Environment
+.env
