@@ -129,4 +129,58 @@ class BookServiceTest {
         verify(bookRepository, never()).save(any(Book.class));
     }
 
+    @Test
+    void shouldUpdateExistingBook() {
+        String isbn = "9780134685991";
+
+        Book existingBook = new Book(
+                isbn, "Old Title", "Old Author",
+                "Old description", new BigDecimal("30.00"), 5
+        );
+
+        Book updatedBook = new Book(
+                isbn, "New Title", "New Author",
+                "Updated description", new BigDecimal("39.99"), 15
+        );
+
+        when(bookRepository.findById(isbn))
+                .thenReturn(Optional.of(existingBook));
+
+        when(bookRepository.save(existingBook))
+                .thenReturn(existingBook);
+
+        Book result = bookService.updateBook(isbn, updatedBook);
+
+        assertEquals("New Title", result.getTitle());
+        assertEquals(new BigDecimal("39.99"), result.getPrice());
+        assertEquals(15, result.getStock());
+
+        verify(bookRepository).save(existingBook);
+    }
+
+    @Test
+    void shouldDeleteExistingBook() {
+        String isbn = "9780134685991";
+
+        when(bookRepository.existsById(isbn))
+                .thenReturn(true);
+
+        bookService.deleteBook(isbn);
+
+        verify(bookRepository).deleteById(isbn);
+    }
+
+    @Test
+    void shouldRejectDeletingNonExistingBook() {
+        String isbn = "9999999999";
+
+        when(bookRepository.existsById(isbn))
+                .thenReturn(false);
+
+        assertThrows(BookNotFoundException.class,
+                () -> bookService.deleteBook(isbn));
+
+        verify(bookRepository, never()).deleteById(isbn);
+    }
+
 }
