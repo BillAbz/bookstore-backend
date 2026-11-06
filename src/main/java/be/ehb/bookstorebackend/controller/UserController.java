@@ -4,6 +4,7 @@ import be.ehb.bookstorebackend.dto.UserRegistrationRequest;
 import be.ehb.bookstorebackend.dto.UserResponse;
 import be.ehb.bookstorebackend.entity.User;
 import be.ehb.bookstorebackend.service.UserService;
+import be.ehb.bookstorebackend.dto.UserLoginRequest;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -43,4 +44,24 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> loginUser(
+            @Valid @RequestBody UserLoginRequest request) {
+
+        User user = userService.authenticateUser(
+                request.email(),
+                request.password()
+        );
+
+        UserResponse response = new UserResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 }

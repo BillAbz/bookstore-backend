@@ -2,6 +2,7 @@ package be.ehb.bookstorebackend.service;
 
 import be.ehb.bookstorebackend.entity.User;
 import be.ehb.bookstorebackend.repository.UserRepository;
+import be.ehb.bookstorebackend.exception.InvalidCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -51,4 +52,22 @@ public class UserService {
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
+
+    public User authenticateUser(String email, String password) {
+
+        if (email == null || email.isBlank()
+                || password == null || password.isBlank()) {
+            throw new InvalidCredentialsException();
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(InvalidCredentialsException::new);
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new InvalidCredentialsException();
+        }
+
+        return user;
+    }
+
 }

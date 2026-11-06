@@ -2,6 +2,7 @@ package be.ehb.bookstorebackend.service;
 
 import be.ehb.bookstorebackend.entity.User;
 import be.ehb.bookstorebackend.repository.UserRepository;
+import be.ehb.bookstorebackend.exception.InvalidCredentialsException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,4 +100,62 @@ class UserServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
     }
+
+
+    @Test
+    void shouldAuthenticateUserWithCorrectPassword() {
+        User user = new User(
+                "Bilal", "Test", "bilal.test@example.com",
+                "hashedPassword"
+        );
+
+        when(userRepository.findByEmail(user.getEmail()))
+                .thenReturn(java.util.Optional.of(user));
+
+        when(passwordEncoder.matches(
+                "Test12345!", "hashedPassword"))
+                .thenReturn(true);
+
+        User result = userService.authenticateUser(
+                user.getEmail(), "Test12345!");
+
+        assertEquals(user.getEmail(), result.getEmail());
+        verify(passwordEncoder).matches(
+                "Test12345!", "hashedPassword");
+    }
+
+    @Test
+    void shouldRejectIncorrectPassword() {
+        User user = new User(
+                "Bilal", "Test", "bilal.test@example.com",
+                "hashedPassword"
+        );
+
+        when(userRepository.findByEmail(user.getEmail()))
+                .thenReturn(java.util.Optional.of(user));
+
+        when(passwordEncoder.matches(
+                "WrongPassword", "hashedPassword"))
+                .thenReturn(false);
+
+        assertThrows(InvalidCredentialsException.class,
+                () -> userService.authenticateUser(
+                        user.getEmail(), "WrongPassword"));
+    }
+
+    @Test
+    void shouldRejectUnknownEmail() {
+        String email = "unknown@example.com";
+
+        when(userRepository.findByEmail(email))
+                .thenReturn(java.util.Optional.empty());
+
+        assertThrows(InvalidCredentialsException.class,
+                () -> userService.authenticateUser(
+                        email, "Test12345!"));
+
+        verify(passwordEncoder, never())
+                .matches(anyString(), anyString());
+    }
+
 }
