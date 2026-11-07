@@ -7,7 +7,16 @@ import jakarta.validation.constraints.Min;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reviews")
+
+@Table(
+        name = "reviews",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_review_user_book",
+                        columnNames = {"user_id", "book_isbn"}
+                )
+        }
+)
 public class Review {
 
     @Id

@@ -8,7 +8,11 @@ import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
+    boolean existsByUserIdAndBookIsbn(Long userId, String isbn);
+
     List<Review> findByBookIsbn(String isbn);
 
     List<Review> findByUserId(Long userId);
+
+
 }
