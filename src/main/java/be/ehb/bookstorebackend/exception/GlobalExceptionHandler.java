@@ -40,4 +40,23 @@ public class GlobalExceptionHandler {
                 HttpStatus.UNAUTHORIZED, ex.getMessage());
     }
 
+    @ExceptionHandler(BookImportNotFoundException.class)
+    public ProblemDetail handleBookImportNotFound(
+            BookImportNotFoundException ex) {
+
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(OpenLibraryUnavailableException.class)
+    public ProblemDetail handleOpenLibraryUnavailable(
+            OpenLibraryUnavailableException ex) {
+
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                ex.getMessage()
+        );
+    }
 }

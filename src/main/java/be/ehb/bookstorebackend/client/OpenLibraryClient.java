@@ -3,6 +3,11 @@ package be.ehb.bookstorebackend.client;
 import tools.jackson.databind.JsonNode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import be.ehb.bookstorebackend.exception.BookImportNotFoundException;
+import org.springframework.web.client.HttpClientErrorException;
+import be.ehb.bookstorebackend.exception.OpenLibraryUnavailableException;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.HttpServerErrorException;
 
 @Component
 public class OpenLibraryClient {
@@ -20,10 +25,21 @@ public class OpenLibraryClient {
     }
 
     public JsonNode getBookByIsbn(String isbn) {
-        return restClient.get()
-                .uri("/isbn/{isbn}.json", isbn)
-                .retrieve()
-                .body(JsonNode.class);
+        try {
+            return restClient.get()
+                    .uri("/isbn/{isbn}.json", isbn)
+                    .retrieve()
+                    .body(JsonNode.class);
+
+        } catch (HttpClientErrorException.NotFound ex) {
+            throw new BookImportNotFoundException(isbn);
+
+        } catch (HttpServerErrorException ex) {
+            throw new OpenLibraryUnavailableException();
+
+        } catch (RestClientException ex) {
+            throw new OpenLibraryUnavailableException();
+        }
     }
 
     public String getAuthorName(String authorKey) {
