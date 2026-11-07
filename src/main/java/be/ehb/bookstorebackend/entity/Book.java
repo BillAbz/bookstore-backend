@@ -13,6 +13,8 @@ public class Book {
 
     private String title;
     private String author;
+    @Lob
+    @Column(columnDefinition = "CLOB")
     private String description;
     private BigDecimal price;
     private int stock;

@@ -3,6 +3,7 @@ package be.ehb.bookstorebackend.controller;
 
 import be.ehb.bookstorebackend.entity.Book;
 import be.ehb.bookstorebackend.service.BookService;
+import be.ehb.bookstorebackend.service.BookImportService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +15,15 @@ import java.util.List;
 public class BookController {
 
     private final BookService bookService;
+    private final BookImportService bookImportService;
 
-    public BookController(BookService bookService) {
+
+    public BookController(
+            BookService bookService,
+            BookImportService bookImportService) {
+
         this.bookService = bookService;
+        this.bookImportService = bookImportService;
     }
 
     @GetMapping
@@ -52,5 +59,16 @@ public class BookController {
             @PathVariable String isbn) {
         bookService.deleteBook(isbn);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/import/{isbn}")
+    public ResponseEntity<Book> importBook(
+            @PathVariable String isbn) {
+
+        Book importedBook =
+                bookImportService.importBookByIsbn(isbn);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(importedBook);
     }
 }
