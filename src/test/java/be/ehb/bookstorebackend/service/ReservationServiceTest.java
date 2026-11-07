@@ -1,0 +1,149 @@
+package be.ehb.bookstorebackend.service;
+
+import be.ehb.bookstorebackend.entity.Book;
+import be.ehb.bookstorebackend.entity.Reservation;
+import be.ehb.bookstorebackend.entity.User;
+import be.ehb.bookstorebackend.repository.BookRepository;
+import be.ehb.bookstorebackend.repository.ReservationRepository;
+import be.ehb.bookstorebackend.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import java.math.BigDecimal;
+import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class ReservationServiceTest {
+
+    private ReservationRepository reservationRepository;
+    private BookRepository bookRepository;
+    private UserRepository userRepository;
+    private ReservationService reservationService;
+
+    private User user;
+    private Book book;
+
+    @BeforeEach
+    void setUp() {
+        reservationRepository = mock(ReservationRepository.class);
+        bookRepository = mock(BookRepository.class);
+        userRepository = mock(UserRepository.class);
+
+        reservationService = new ReservationService(
+                reservationRepository,
+                bookRepository,
+                userRepository
+        );
+
+        user = new User(
+                "Bilal", "Test",
+                "bilal.test@example.com",
+                "hashedPassword"
+        );
+        user.setId(1L);
+
+        book = new Book(
+                "9780134685991",
+                "Effective Java",
+                "Joshua Bloch",
+                "Java programming guide",
+                new BigDecimal("45.99"),
+                10
+        );
+    }
+
+    @Test
+    void shouldCreateReservationAndDecreaseStock() {
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        when(bookRepository.findByIsbnForUpdate(book.getIsbn()))
+                .thenReturn(Optional.of(book));
+
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Reservation result = reservationService.createReservation(
+                1L, book.getIsbn()
+        );
+
+        assertEquals(9, book.getStock());
+        assertEquals(user, result.getUser());
+        assertEquals(book, result.getBook());
+
+        verify(bookRepository).save(book);
+        verify(reservationRepository).save(any(Reservation.class));
+    }
+
+    @Test
+    void shouldRejectReservationWhenOutOfStock() {
+        book.setStock(0);
+
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        when(bookRepository.findByIsbnForUpdate(book.getIsbn()))
+                .thenReturn(Optional.of(book));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservationService.createReservation(
+                        1L, book.getIsbn()
+                ));
+
+        verify(reservationRepository, never())
+                .save(any(Reservation.class));
+
+        verify(bookRepository, never())
+                .save(any(Book.class));
+    }
+
+    @Test
+    void shouldRejectReservationForUnknownUser() {
+        when(userRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservationService.createReservation(
+                        999L, book.getIsbn()
+                ));
+
+        verify(bookRepository, never())
+                .save(any(Book.class));
+
+        verify(reservationRepository, never())
+                .save(any(Reservation.class));
+    }
+
+
+    @Test
+    void shouldCancelReservationAndRestoreStock() {
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation));
+
+        when(bookRepository.findByIsbnForUpdate(book.getIsbn()))
+                .thenReturn(Optional.of(book));
+
+        reservationService.cancelReservation(1L);
+
+        assertEquals(11, book.getStock());
+
+        verify(bookRepository).findByIsbnForUpdate(book.getIsbn());
+        verify(bookRepository).save(book);
+        verify(reservationRepository).delete(reservation);
+    }
+
+    @Test
+    void shouldRejectCancellationOfUnknownReservation() {
+        when(reservationRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservationService.cancelReservation(999L));
+
+        verify(bookRepository, never())
+                .save(any(Book.class));
+    }
+}

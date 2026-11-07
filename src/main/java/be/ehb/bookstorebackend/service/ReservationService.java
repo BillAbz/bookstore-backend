@@ -1,0 +1,83 @@
+package be.ehb.bookstorebackend.service;
+
+import be.ehb.bookstorebackend.entity.Book;
+import be.ehb.bookstorebackend.entity.Reservation;
+import be.ehb.bookstorebackend.entity.User;
+import be.ehb.bookstorebackend.repository.BookRepository;
+import be.ehb.bookstorebackend.repository.ReservationRepository;
+import be.ehb.bookstorebackend.repository.UserRepository;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class ReservationService {
+
+    private final ReservationRepository reservationRepository;
+    private final BookRepository bookRepository;
+    private final UserRepository userRepository;
+
+    public ReservationService(
+            ReservationRepository reservationRepository,
+            BookRepository bookRepository,
+            UserRepository userRepository) {
+
+        this.reservationRepository = reservationRepository;
+        this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
+    }
+
+    @Transactional
+    public Reservation createReservation(Long userId, String isbn) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "User not found: " + userId));
+
+        Book book = bookRepository.findByIsbnForUpdate(isbn)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Book not found: " + isbn));
+
+        if (book.getStock() <= 0) {
+            throw new IllegalArgumentException(
+                    "Book is out of stock");
+        }
+
+        book.setStock(book.getStock() - 1);
+        bookRepository.save(book);
+
+        Reservation reservation = new Reservation(user, book);
+        return reservationRepository.save(reservation);
+    }
+
+
+    @Transactional
+    public void cancelReservation(Long reservationId) {
+
+        Reservation reservation = reservationRepository
+                .findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Reservation not found: " + reservationId));
+
+        String isbn = reservation.getBook().getIsbn();
+
+        Book book = bookRepository.findByIsbnForUpdate(isbn)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Book not found: " + isbn));
+
+        book.setStock(book.getStock() + 1);
+        bookRepository.save(book);
+
+        reservationRepository.delete(reservation);
+    }
+
+    public List<Reservation> getReservationsByUser(Long userId) {
+        return reservationRepository.findByUserId(userId);
+    }
+
+    public List<Reservation> getReservationsByBook(String isbn) {
+        return reservationRepository.findByBookIsbn(isbn);
+    }
+}
