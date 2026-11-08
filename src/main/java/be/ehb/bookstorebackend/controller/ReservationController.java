@@ -104,4 +104,14 @@ public class ReservationController {
                 reservation.isCollected()
         );
     }
+
+    @PatchMapping("/{id}/collect")
+    public ResponseEntity<ReservationResponse> collectReservation(
+            @PathVariable Long id) {
+
+        Reservation reservation =
+                reservationService.collectReservation(id);
+
+        return ResponseEntity.ok(toResponse(reservation));
+    }
 }

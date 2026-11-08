@@ -9,6 +9,7 @@ import be.ehb.bookstorebackend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.access.AccessDeniedException;
+import java.time.LocalDateTime;
 
 import java.util.List;
 
@@ -57,13 +58,19 @@ public class ReservationService {
     public void cancelReservation(Long reservationId, Long authenticatedUserId) {
 
         Reservation reservation = reservationRepository
-                .findById(reservationId)
+                .findByIdForUpdate(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Reservation not found: " + reservationId));
 
         if (!reservation.getUser().getId().equals(authenticatedUserId)) {
             throw new AccessDeniedException(
                     "You cannot cancel another user's reservation"
+            );
+        }
+
+        if (reservation.isCollected()) {
+            throw new IllegalArgumentException(
+                    "Collected reservations cannot be cancelled"
             );
         }
 
@@ -85,5 +92,61 @@ public class ReservationService {
 
     public List<Reservation> getReservationsByBook(String isbn) {
         return reservationRepository.findByBookIsbn(isbn);
+    }
+
+    @Transactional
+    public void expireReservation(Long reservationId, LocalDateTime cutoff) {
+
+        Reservation reservation = reservationRepository
+                .findByIdForUpdate(reservationId)
+                .orElse(null);
+
+        if (reservation == null) {
+            return;
+        }
+
+        if (reservation.isCollected()
+                || !reservation.getReservationDate().isBefore(cutoff)) {
+            return;
+        }
+
+        Book book = bookRepository
+                .findByIsbnForUpdate(reservation.getBook().getIsbn())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Book not found for reservation"
+                ));
+
+        book.setStock(book.getStock() + 1);
+        bookRepository.save(book);
+
+        reservationRepository.delete(reservation);
+    }
+
+    @Transactional
+    public Reservation collectReservation(Long reservationId) {
+
+        Reservation reservation = reservationRepository
+                .findByIdForUpdate(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Reservation not found: " + reservationId
+                ));
+
+        if (reservation.isCollected()) {
+            throw new IllegalArgumentException(
+                    "Reservation has already been collected"
+            );
+        }
+
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+
+        if (reservation.getReservationDate().isBefore(cutoff)) {
+            throw new IllegalArgumentException(
+                    "Reservation has expired"
+            );
+        }
+
+        reservation.setCollected(true);
+
+        return reservationRepository.save(reservation);
     }
 }

@@ -13,6 +13,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import org.springframework.security.access.AccessDeniedException;
+import java.time.LocalDateTime;
 
 class ReservationServiceTest {
 
@@ -121,7 +122,7 @@ class ReservationServiceTest {
         Reservation reservation = new Reservation(user, book);
         reservation.setId(1L);
 
-        when(reservationRepository.findById(1L))
+        when(reservationRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(reservation));
 
         when(bookRepository.findByIsbnForUpdate(book.getIsbn()))
@@ -161,7 +162,7 @@ class ReservationServiceTest {
         Reservation reservation = new Reservation(user, book);
         reservation.setId(1L);
 
-        when(reservationRepository.findById(1L))
+        when(reservationRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(reservation));
 
         assertThrows(
@@ -176,4 +177,150 @@ class ReservationServiceTest {
                 .delete(any(Reservation.class));
     }
 
+    @Test
+    void shouldExpireOldReservationAndRestoreStock() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+        reservation.setReservationDate(cutoff.minusHours(1));
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        when(bookRepository.findByIsbnForUpdate(book.getIsbn()))
+                .thenReturn(Optional.of(book));
+
+        reservationService.expireReservation(1L, cutoff);
+
+        assertEquals(11, book.getStock());
+
+        verify(bookRepository).save(book);
+        verify(reservationRepository).delete(reservation);
+    }
+
+    @Test
+    void shouldNotExpireCollectedReservation() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+        reservation.setCollected(true);
+
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+        reservation.setReservationDate(cutoff.minusHours(1));
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        reservationService.expireReservation(1L, cutoff);
+
+        assertEquals(10, book.getStock());
+
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(reservationRepository, never())
+                .delete(any(Reservation.class));
+    }
+
+    @Test
+    void shouldNotExpireRecentReservation() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+        reservation.setReservationDate(LocalDateTime.now());
+
+        LocalDateTime cutoff = LocalDateTime.now().minusHours(24);
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        reservationService.expireReservation(1L, cutoff);
+
+        assertEquals(10, book.getStock());
+
+        verify(bookRepository, never()).save(any(Book.class));
+        verify(reservationRepository, never())
+                .delete(any(Reservation.class));
+    }
+
+    @Test
+    void shouldCollectReservationSuccessfully() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+        reservation.setReservationDate(LocalDateTime.now().minusHours(1));
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        when(reservationRepository.save(any(Reservation.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Reservation result = reservationService.collectReservation(1L);
+
+        assertTrue(result.isCollected());
+
+        verify(reservationRepository).save(reservation);
+        verify(bookRepository, never()).save(any(Book.class));
+    }
+
+    @Test
+    void shouldRejectAlreadyCollectedReservation() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+        reservation.setCollected(true);
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> reservationService.collectReservation(1L)
+        );
+
+        verify(reservationRepository, never())
+                .save(any(Reservation.class));
+    }
+
+    @Test
+    void shouldRejectCollectingExpiredReservation() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+        reservation.setReservationDate(LocalDateTime.now().minusHours(25));
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> reservationService.collectReservation(1L)
+        );
+
+        verify(reservationRepository, never())
+                .save(any(Reservation.class));
+    }
+
+    @Test
+    void shouldRejectCancellingCollectedReservation() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+        reservation.setCollected(true);
+
+        when(reservationRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(reservation));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> reservationService.cancelReservation(1L, 1L)
+        );
+
+        verify(bookRepository, never())
+                .save(any(Book.class));
+
+        verify(reservationRepository, never())
+                .delete(any(Reservation.class));
+    }
 }

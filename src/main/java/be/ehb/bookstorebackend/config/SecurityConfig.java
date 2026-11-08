@@ -70,6 +70,11 @@ public class SecurityConfig {
                                 "/api/reservations/book/*"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/reservations/*/collect"
+                        ).hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
 
