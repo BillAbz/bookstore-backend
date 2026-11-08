@@ -6,9 +6,9 @@ import be.ehb.bookstorebackend.entity.User;
 import be.ehb.bookstorebackend.repository.BookRepository;
 import be.ehb.bookstorebackend.repository.ReservationRepository;
 import be.ehb.bookstorebackend.repository.UserRepository;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -54,12 +54,18 @@ public class ReservationService {
 
 
     @Transactional
-    public void cancelReservation(Long reservationId) {
+    public void cancelReservation(Long reservationId, Long authenticatedUserId) {
 
         Reservation reservation = reservationRepository
                 .findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Reservation not found: " + reservationId));
+
+        if (!reservation.getUser().getId().equals(authenticatedUserId)) {
+            throw new AccessDeniedException(
+                    "You cannot cancel another user's reservation"
+            );
+        }
 
         String isbn = reservation.getBook().getIsbn();
 

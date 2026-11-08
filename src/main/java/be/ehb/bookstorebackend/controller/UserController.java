@@ -5,20 +5,23 @@ import be.ehb.bookstorebackend.dto.UserResponse;
 import be.ehb.bookstorebackend.entity.User;
 import be.ehb.bookstorebackend.service.UserService;
 import be.ehb.bookstorebackend.dto.UserLoginRequest;
-
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import be.ehb.bookstorebackend.dto.UserLoginResponse;
+import be.ehb.bookstorebackend.service.JwtService;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtService jwtService) {
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -45,8 +48,9 @@ public class UserController {
                 .body(response);
     }
 
+
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> loginUser(
+    public ResponseEntity<UserLoginResponse> login(
             @Valid @RequestBody UserLoginRequest request) {
 
         User user = userService.authenticateUser(
@@ -54,14 +58,14 @@ public class UserController {
                 request.password()
         );
 
-        UserResponse response = new UserResponse(
-                user.getId(),
-                user.getFirstName(),
-                user.getLastName(),
-                user.getEmail()
+        String token = jwtService.generateToken(user);
+
+        UserLoginResponse response = new UserLoginResponse(
+                token,
+                "Bearer",
+                3600
         );
 
         return ResponseEntity.ok(response);
     }
-
 }

@@ -8,6 +8,9 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -23,10 +26,19 @@ public class ReviewController {
 
     @PostMapping
     public ResponseEntity<ReviewResponse> createReview(
-            @Valid @RequestBody ReviewRequest request) {
+            @Valid @RequestBody ReviewRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        Long authenticatedUserId = Long.valueOf(jwt.getSubject());
+
+        if (!authenticatedUserId.equals(request.userId())) {
+            throw new AccessDeniedException(
+                    "You cannot create a review for another user"
+            );
+        }
 
         Review review = reviewService.createReview(
-                request.userId(),
+                authenticatedUserId,
                 request.isbn(),
                 request.rating(),
                 request.comment()
@@ -48,7 +60,16 @@ public class ReviewController {
 
     @GetMapping("/user/{userId}")
     public List<ReviewResponse> getReviewsByUser(
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        Long authenticatedUserId = Long.valueOf(jwt.getSubject());
+
+        if (!authenticatedUserId.equals(userId)) {
+            throw new AccessDeniedException(
+                    "You can only view your own reviews"
+            );
+        }
 
         return reviewService.getReviewsByUser(userId)
                 .stream()
@@ -58,11 +79,16 @@ public class ReviewController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReview(
-            @PathVariable Long id) {
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        reviewService.deleteReview(id);
+        Long authenticatedUserId = Long.valueOf(jwt.getSubject());
+
+        reviewService.deleteReview(id, authenticatedUserId);
+
         return ResponseEntity.noContent().build();
     }
+
 
     private ReviewResponse toResponse(Review review) {
         return new ReviewResponse(

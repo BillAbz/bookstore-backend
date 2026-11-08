@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.springframework.security.access.AccessDeniedException;
 
 class ReservationServiceTest {
 
@@ -126,7 +127,7 @@ class ReservationServiceTest {
         when(bookRepository.findByIsbnForUpdate(book.getIsbn()))
                 .thenReturn(Optional.of(book));
 
-        reservationService.cancelReservation(1L);
+        reservationService.cancelReservation(1L, 1L);
 
         assertEquals(11, book.getStock());
 
@@ -135,15 +136,44 @@ class ReservationServiceTest {
         verify(reservationRepository).delete(reservation);
     }
 
+
     @Test
     void shouldRejectCancellationOfUnknownReservation() {
+
         when(reservationRepository.findById(999L))
                 .thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> reservationService.cancelReservation(999L));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> reservationService.cancelReservation(999L, 1L)
+        );
 
         verify(bookRepository, never())
                 .save(any(Book.class));
+
+        verify(reservationRepository, never())
+                .delete(any(Reservation.class));
     }
+
+    @Test
+    void shouldRejectCancellationByAnotherUser() {
+
+        Reservation reservation = new Reservation(user, book);
+        reservation.setId(1L);
+
+        when(reservationRepository.findById(1L))
+                .thenReturn(Optional.of(reservation));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> reservationService.cancelReservation(1L, 999L)
+        );
+
+        verify(bookRepository, never())
+                .save(any(Book.class));
+
+        verify(reservationRepository, never())
+                .delete(any(Reservation.class));
+    }
+
 }

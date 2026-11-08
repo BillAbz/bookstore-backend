@@ -8,6 +8,7 @@ import be.ehb.bookstorebackend.repository.ReviewRepository;
 import be.ehb.bookstorebackend.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -68,14 +69,22 @@ public class ReviewService {
         return reviewRepository.findByUserId(userId);
     }
 
-    @Transactional
-    public void deleteReview(Long reviewId) {
 
-        if (!reviewRepository.existsById(reviewId)) {
-            throw new IllegalArgumentException(
-                    "Review not found: " + reviewId);
+    @Transactional
+    public void deleteReview(Long reviewId, Long authenticatedUserId) {
+
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Review not found: " + reviewId
+                ));
+
+        if (!review.getUser().getId().equals(authenticatedUserId)) {
+            throw new AccessDeniedException(
+                    "You cannot delete another user's review"
+            );
         }
 
-        reviewRepository.deleteById(reviewId);
+        reviewRepository.delete(review);
     }
+
 }

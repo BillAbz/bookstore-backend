@@ -4,11 +4,13 @@ import be.ehb.bookstorebackend.dto.ReservationRequest;
 import be.ehb.bookstorebackend.dto.ReservationResponse;
 import be.ehb.bookstorebackend.entity.Reservation;
 import be.ehb.bookstorebackend.service.ReservationService;
-
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.List;
 
@@ -25,13 +27,21 @@ public class ReservationController {
 
     @PostMapping
     public ResponseEntity<ReservationResponse> createReservation(
-            @Valid @RequestBody ReservationRequest request) {
+            @Valid @RequestBody ReservationRequest request,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        Reservation reservation =
-                reservationService.createReservation(
-                        request.userId(),
-                        request.isbn()
-                );
+        Long authenticatedUserId = Long.valueOf(jwt.getSubject());
+
+        if (!authenticatedUserId.equals(request.userId())) {
+            throw new AccessDeniedException(
+                    "You cannot create a reservation for another user"
+            );
+        }
+
+        Reservation reservation = reservationService.createReservation(
+                authenticatedUserId,
+                request.isbn()
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(toResponse(reservation));
@@ -39,7 +49,16 @@ public class ReservationController {
 
     @GetMapping("/user/{userId}")
     public List<ReservationResponse> getReservationsByUser(
-            @PathVariable Long userId) {
+            @PathVariable Long userId,
+            @AuthenticationPrincipal Jwt jwt) {
+
+        Long authenticatedUserId = Long.valueOf(jwt.getSubject());
+
+        if (!authenticatedUserId.equals(userId)) {
+            throw new AccessDeniedException(
+                    "You can only view your own reservations"
+            );
+        }
 
         return reservationService.getReservationsByUser(userId)
                 .stream()
@@ -58,12 +77,20 @@ public class ReservationController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancelReservation(
-            @PathVariable Long id) {
+    public ResponseEntity<Void> deleteReservation(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt) {
 
-        reservationService.cancelReservation(id);
+        Long authenticatedUserId = Long.valueOf(jwt.getSubject());
+
+        reservationService.cancelReservation(
+                id,
+                authenticatedUserId
+        );
+
         return ResponseEntity.noContent().build();
     }
+
 
     private ReservationResponse toResponse(
             Reservation reservation) {

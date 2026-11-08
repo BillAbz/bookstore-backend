@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.springframework.security.access.AccessDeniedException;
 
 class ReviewServiceTest {
 
@@ -155,27 +156,50 @@ class ReviewServiceTest {
                 .findByBookIsbn(book.getIsbn());
     }
 
+
     @Test
     void shouldDeleteExistingReview() {
 
-        when(reviewRepository.existsById(1L))
-                .thenReturn(true);
+        Review review = new Review(user, book, 5, "Great book");
 
-        reviewService.deleteReview(1L);
+        when(reviewRepository.findById(1L))
+                .thenReturn(Optional.of(review));
 
-        verify(reviewRepository).deleteById(1L);
+        reviewService.deleteReview(1L, 1L);
+
+        verify(reviewRepository).delete(review);
     }
 
     @Test
     void shouldRejectDeletingUnknownReview() {
 
-        when(reviewRepository.existsById(999L))
-                .thenReturn(false);
+        when(reviewRepository.findById(999L))
+                .thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> reviewService.deleteReview(999L));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> reviewService.deleteReview(999L, 1L)
+        );
 
         verify(reviewRepository, never())
-                .deleteById(999L);
+                .delete(any(Review.class));
     }
+
+    @Test
+    void shouldRejectDeletingAnotherUsersReview() {
+
+        Review review = new Review(user, book, 5, "Great book");
+
+        when(reviewRepository.findById(1L))
+                .thenReturn(Optional.of(review));
+
+        assertThrows(
+                AccessDeniedException.class,
+                () -> reviewService.deleteReview(1L, 999L)
+        );
+
+        verify(reviewRepository, never())
+                .delete(any(Review.class));
+    }
+
 }
