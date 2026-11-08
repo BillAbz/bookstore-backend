@@ -25,11 +25,6 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
 
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.sameOrigin()
-                        )
-                )
-
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
@@ -40,9 +35,6 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
 
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers("/h2-console", "/h2-console/**"
-                        ).permitAll()
 
                         .requestMatchers(
                                 HttpMethod.POST,
@@ -73,6 +65,10 @@ public class SecurityConfig {
                                 "/api/books/*"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/reservations/book/*"
+                        ).hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
