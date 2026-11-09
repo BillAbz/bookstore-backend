@@ -75,6 +75,14 @@ public class SecurityConfig {
                                 "/api/reservations/*/collect"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/assets/**",
+                                "/vite.svg",
+                                "/favicon.ico"
+                        ).permitAll()
+
                         .anyRequest().authenticated()
                 )
 

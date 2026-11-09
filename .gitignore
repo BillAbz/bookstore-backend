@@ -61,3 +61,14 @@ backend/*.iml
 # General
 .DS_Store
 .idea/
+
+# Generated React production files
+backend/src/main/resources/static/
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/dist/
+
+# Backend build output and local database
+backend/target/
+backend/data/
