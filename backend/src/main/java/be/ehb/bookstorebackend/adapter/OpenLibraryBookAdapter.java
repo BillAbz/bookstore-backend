@@ -55,12 +55,13 @@ public class OpenLibraryBookAdapter {
         }
 
 
+
         String author = "Unknown author";
 
         JsonNode authors = json.path("authors");
 
+// First try the edition's author information
         if (authors.isArray() && !authors.isEmpty()) {
-
             JsonNode firstAuthor = authors.get(0);
 
             String authorKey = firstAuthor
@@ -79,6 +80,44 @@ public class OpenLibraryBookAdapter {
             }
         }
 
+// If no author was found, check the related work
+        if ("Unknown author".equals(author)) {
+
+            JsonNode works = json.path("works");
+
+            if (works.isArray() && !works.isEmpty()) {
+
+                String workKey = works.get(0)
+                        .path("key")
+                        .asText("");
+
+                if (workKey.matches("/works/OL[0-9]+W")) {
+
+                    JsonNode workJson =
+                            openLibraryClient.getWorkByKey(workKey);
+
+                    if (workJson != null) {
+
+                        JsonNode workAuthors =
+                                workJson.path("authors");
+
+                        if (workAuthors.isArray()
+                                && !workAuthors.isEmpty()) {
+
+                            String authorKey = workAuthors.get(0)
+                                    .path("author")
+                                    .path("key")
+                                    .asText("");
+
+                            if (authorKey.matches("/authors/OL[0-9]+A")) {
+                                author = openLibraryClient
+                                        .getAuthorName(authorKey);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         return new Book(
                 isbn,

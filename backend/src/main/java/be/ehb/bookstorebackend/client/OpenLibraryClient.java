@@ -64,4 +64,24 @@ public class OpenLibraryClient {
                 .asText("Unknown author");
     }
 
+
+    public JsonNode getWorkByKey(String workKey) {
+
+        if (workKey == null ||
+                !workKey.matches("/works/OL[0-9]+W")) {
+            throw new IllegalArgumentException(
+                    "Invalid work key"
+            );
+        }
+
+        try {
+            return restClient.get()
+                    .uri(workKey + ".json")
+                    .retrieve()
+                    .body(JsonNode.class);
+
+        } catch (RestClientException ex) {
+            return null;
+        }
+    }
 }

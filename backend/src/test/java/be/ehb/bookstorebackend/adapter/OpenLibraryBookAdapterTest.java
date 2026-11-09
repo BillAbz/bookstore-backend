@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import tools.jackson.databind.ObjectMapper;
+
 class OpenLibraryBookAdapterTest {
 
     private OpenLibraryBookAdapter adapter;
@@ -136,5 +138,50 @@ class OpenLibraryBookAdapterTest {
                 "Description stored as an object",
                 result.getDescription()
         );
+    }
+
+    @Test
+    void shouldGetAuthorFromWorkWhenEditionHasNoAuthor() throws Exception {
+
+        String editionJson = """
+        {
+          "title": "Test Book",
+          "number_of_pages": 250,
+          "works": [
+            {"key": "/works/OL12345W"}
+          ]
+        }
+        """;
+
+        String workJson = """
+        {
+          "authors": [
+            {
+              "author": {
+                "key": "/authors/OL67890A"
+              }
+            }
+          ]
+        }
+        """;
+
+        JsonNode edition = new ObjectMapper().readTree(editionJson);
+        JsonNode work = new ObjectMapper().readTree(workJson);
+
+        when(openLibraryClient.getWorkByKey("/works/OL12345W"))
+                .thenReturn(work);
+
+        when(openLibraryClient.getAuthorName("/authors/OL67890A"))
+                .thenReturn("Test Author");
+
+        when(pricingStrategy.calculatePrice(250))
+                .thenReturn(new BigDecimal("19.99"));
+
+        Book book = adapter.toBook("9781234567897", edition);
+
+        assertEquals("Test Author", book.getAuthor());
+
+        verify(openLibraryClient)
+                .getWorkByKey("/works/OL12345W");
     }
 }
