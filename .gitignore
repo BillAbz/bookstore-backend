@@ -40,3 +40,24 @@ data/
 
 # Environment
 .env
+
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# Backend
+backend/target/
+backend/data/
+backend/.env
+backend/.env.*
+!backend/.env.example
+backend/.idea/
+backend/*.iml
+
+# General
+.DS_Store
+.idea/

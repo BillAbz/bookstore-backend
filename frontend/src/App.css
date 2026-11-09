@@ -1,0 +1,463 @@
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.header button,
+.login-box button {
+  padding: 10px 18px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.header button:hover,
+.login-box button:hover {
+  background: #1d4ed8;
+}
+
+.user-email {
+  margin-right: 15px;
+}
+
+.login-box {
+  max-width: 380px;
+  margin: 20px auto;
+  padding: 25px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-box input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.header > div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.success {
+  color: #15803d;
+  font-weight: 500;
+}
+
+
+.reserve-button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #16a34a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.reserve-button:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.reserve-button:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+
+.reservations-section {
+  margin: 30px 0;
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.reservation-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.reservation-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.cancel-button {
+  padding: 10px 14px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-button:hover {
+  background: #b91c1c;
+}
+
+.section-header button {
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.reviews-button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  width: 100%;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  background: white;
+  color: #2563eb;
+  cursor: pointer;
+}
+
+.reviews-button:hover {
+  background: #eff6ff;
+}
+
+.reviews-section {
+  margin-top: 32px;
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.review-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.review-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 450px;
+  margin-top: 24px;
+}
+
+.review-form select,
+.review-form textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.review-form button {
+  padding: 12px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.admin-section {
+  margin: 30px 0;
+  padding: 24px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+}
+
+.admin-form input,
+.admin-form textarea {
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.admin-form button {
+  padding: 12px 18px;
+  background: #1e40af;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.admin-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.edit-book-button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  width: 100%;
+  background: #f59e0b;
+  color: #111827;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.edit-book-button:hover {
+  background: #d97706;
+}
+
+.cancel-edit-button {
+  background: #64748b !important;
+}
+
+.cancel-edit-button:hover {
+  background: #475569 !important;
+}
+
+.admin-form input[readonly] {
+  background: #e2e8f0;
+  cursor: not-allowed;
+}
+
+.delete-book-button {
+  margin-top: 10px;
+  padding: 10px 16px;
+  width: 100%;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.delete-book-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.delete-book-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.import-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+}
+
+.import-section p {
+  font-size: 14px;
+  color: #475569;
+}
+
+.import-form {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.import-form input {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 15px;
+}
+
+.import-form button {
+  padding: 12px 20px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.import-form button:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.import-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Main layout */
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  color: #1e293b;
+}
+
+.header {
+  padding: 20px 24px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.header h1 {
+  margin: 0;
+  color: #1e40af;
+}
+
+/* Book catalog */
+
+.book-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 24px;
+}
+
+.book-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 22px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06);
+  text-align: left;
+}
+
+.book-card h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #1e40af;
+}
+
+.book-card p {
+  margin: 6px 0;
+  overflow-wrap: anywhere;
+}
+
+.reserve-button {
+  margin-top: auto;
+}
+
+.reviews-button,
+.edit-book-button,
+.delete-book-button {
+  flex-shrink: 0;
+}
+
+/* Mobile and tablet */
+
+@media (max-width: 900px) {
+  .book-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 16px;
+  }
+
+  .header {
+    padding: 16px;
+  }
+
+  .book-list {
+    grid-template-columns: 1fr;
+  }
+
+  .header > div {
+    flex-wrap: wrap;
+  }
+
+  .book-card {
+    padding: 18px;
+  }
+
+  .admin-section,
+  .reservations-section,
+  .reviews-section {
+    padding: 16px;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay .reviews-section {
+  width: 100%;
+  max-width: 650px;
+  max-height: 85vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 28px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 600px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-overlay .reviews-section {
+    padding: 18px;
+    max-height: 90vh;
+  }
+}
+
